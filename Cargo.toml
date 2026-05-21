@@ -1,10 +1,10 @@
 [package]
 edition = "2024"
-name    = "gerrit-autosubmit"
+name = "gerrit-autosubmit"
 version = "0.1.0"
 
 [dependencies]
-anyhow     = "1.0.75"
-crimp      = "4087.0.0"
-serde      = { features = [ "derive" ], version = "1.0.193" }
+anyhow = "1.0.75"
+crimp = "4087.0.0"
+serde = { features = ["derive"], version = "1.0.193" }
 serde_json = "1.0.108"

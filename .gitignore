@@ -10,6 +10,7 @@
 !nix/*.nix
 
 !.rustfmt.toml
+!.taplo.toml
 
 !LICENSE
 !*.md
