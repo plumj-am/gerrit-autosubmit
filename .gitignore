@@ -1,0 +1,14 @@
+*
+!.gitignore
+
+!src/
+!src/**.rs
+!Cargo.*
+
+!flake.*
+
+!.rustfmt.toml
+
+!LICENSE
+!*.md
+
