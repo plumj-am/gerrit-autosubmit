@@ -29,7 +29,7 @@ in
         buildInputs = [ pkgs.openssl ];
         nativeBuildInputs = [ pkgs.pkg-config ];
         env.LD_LIBRARY_PATH = "${pkgs.openssl.out}/lib";
-
+        runtimeDependencies = [ pkgs.openssl ];
       };
 
       cargoArtifacts = craneLib.buildDepsOnly commonArgs;
@@ -38,6 +38,7 @@ in
         commonArgs
         // {
           inherit pname;
+          meta.mainProgram = "gerrit-autosubmit";
         }
       );
     in
