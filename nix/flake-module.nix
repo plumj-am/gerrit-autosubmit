@@ -89,7 +89,10 @@ in
     };
 
   flake = {
-    nixosModules.default = import ./module.nix;
+    nixosModules.default = { config, lib, pkgs, ... }: {
+      imports = [ ./module.nix ];
+      nixpkgs.overlays = [ self.overlays.default ];
+    };
 
     overlays.default = final: _: {
       gerrit-autosubmit = self.packages.${final.system}.default;
