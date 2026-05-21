@@ -62,11 +62,13 @@
 
         cargoArtifacts = craneLib.buildDepsOnly commonArgs;
 
-        default = craneLib.buildPackage {
-          pname = "gerrit-autosubmit";
-
-          src = ./..;
-        };
+        pkg = craneLib.buildPackage (
+          commonArgs
+          // {
+            pname = "gerrit-autosubmit";
+            src = ./.;
+          }
+        );
       in
       {
         checks = lib.mapAttrs' (n: v: lib.nameValuePair "package-${n}" v) self.packages.${system} // {
@@ -115,16 +117,27 @@
         };
 
         packages = {
-          inherit default;
+          default = pkg;
+          gerrit-autosubmit = pkg;
         };
 
         apps.default = flake-utils.lib.mkApp {
-          drv = default;
+          drv = pkg;
         };
 
         devShells.default = craneLib.devShell {
           checks = self.checks.${system};
         };
       }
-    );
+    )
+    # --- Cross-system outputs ---
+    // {
+      nixosModules.default = import ./nix/module.nix;
+
+      overlays.default = final: prev: {
+        gerrit-autosubmit = self.packages.${final.system}.default;
+      };
+
+      flakeModules.default = import ./nix/flake-module.nix;
+    };
 }

@@ -6,6 +6,8 @@
 !Cargo.*
 
 !flake.*
+!nix/
+!nix/*.nix
 
 !.rustfmt.toml
 
