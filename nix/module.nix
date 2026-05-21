@@ -1,57 +1,47 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 let
   cfg = config.services.gerrit-autosubmit;
-  inherit (lib) types mkOption mkIf mkEnableOption literalExpression;
+  description = "gerrit-autosubmit - autosubmit bot for Gerrit";
+  mkStringOption =
+    default:
+    lib.mkOption {
+      inherit default;
+      type = lib.types.str;
+    };
 in
 {
   options.services.gerrit-autosubmit = {
-    enable = mkEnableOption "Gerrit autosubmit bot";
+    enable = lib.mkEnableOption description;
 
-    package = mkOption {
-      type = types.package;
-      default = pkgs.gerrit-autosubmit;
-      defaultText = literalExpression "pkgs.gerrit-autosubmit";
-      description = "gerrit-autosubmit package to use";
-    };
+    gerritUrl = mkStringOption "https://gerrit.example.com";
 
-    gerritUrl = mkOption {
-      type = types.str;
-      default = "https://cl.snix.dev";
-      description = "Gerrit instance base URL";
-    };
+    gerritUsername = mkStringOption "autosubmit-bot";
 
-    gerritUsername = mkOption {
-      type = types.str;
-      default = "clbot";
-      description = "Gerrit username";
-    };
-
-    environmentFile = mkOption {
-      type = types.nullOr types.path;
-      default = null;
-      example = "/run/secrets/gerrit-autosubmit";
-      description = ''
-        Path to a systemd EnvironmentFile containing GERRIT_PASSWORD.
-        See systemd.exec(5) for the format.
-      '';
+    secretsFile = lib.mkOption {
+      description = "Path to a systemd EnvironmentFile containing secrets";
+      default = config.age.secretsDir + "/gerrit-autosubmit";
+      type = lib.types.str;
     };
   };
 
-  config = mkIf cfg.enable {
+  config = lib.mkIf cfg.enable {
     systemd.services.gerrit-autosubmit = {
-      description = "gerrit-autosubmit - autosubmit bot for Gerrit";
+      inherit description;
       wantedBy = [ "multi-user.target" ];
       wants = [ "network-online.target" ];
       after = [ "network-online.target" ];
 
       serviceConfig = {
-        ExecStart = "${cfg.package}/bin/gerrit-autosubmit";
+        ExecStart = lib.getExe pkgs.gerrit-autosubmit;
         DynamicUser = true;
         Restart = "always";
-        RestartSec = "30s";
-      } // lib.optionalAttrs (cfg.environmentFile != null) {
-        EnvironmentFile = cfg.environmentFile;
+        EnvironmentFile = cfg.secretsFile;
       };
 
       environment = {

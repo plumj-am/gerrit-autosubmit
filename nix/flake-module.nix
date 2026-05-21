@@ -1,13 +1,18 @@
 { self, inputs, ... }:
 
 let
-  inherit (inputs) nixpkgs crane fenix advisory-db;
+  inherit (inputs)
+    nixpkgs
+    crane
+    fenix
+    advisory-db
+    ;
 
-  # Repo root relative paths (this file is in nix/)
   root = ./..;
 in
 {
-  perSystem = { system, ... }:
+  perSystem =
+    { system, ... }:
     let
       pkgs = import nixpkgs { inherit system; };
       inherit (pkgs) lib;
@@ -90,16 +95,20 @@ in
 
     # flake-parts module for consumers:
     #   imports = [ inputs.gerrit-autosubmit.flakeModules.default ];
-    flakeModules.default = { inputs, ... }: {
-      perSystem = { system, ... }: {
-        packages.gerrit-autosubmit = inputs.gerrit-autosubmit.packages.${system}.default;
-      };
-      flake = {
-        nixosModules.gerrit-autosubmit = import ./module.nix;
-        overlays.gerrit-autosubmit = final: prev: {
-          gerrit-autosubmit = inputs.gerrit-autosubmit.packages.${final.system}.default;
+    flakeModules.default =
+      { inputs, ... }:
+      {
+        perSystem =
+          { system, ... }:
+          {
+            packages.gerrit-autosubmit = inputs.gerrit-autosubmit.packages.${system}.default;
+          };
+        flake = {
+          nixosModules.gerrit-autosubmit = import ./module.nix;
+          overlays.gerrit-autosubmit = final: prev: {
+            gerrit-autosubmit = inputs.gerrit-autosubmit.packages.${final.system}.default;
+          };
         };
       };
-    };
   };
 }
