@@ -25,8 +25,8 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    flake-parts.url = "github:hercules-ci/flake-parts";
     crane.url = "github:ipetkov/crane";
-    flake-utils.url = "github:numtide/flake-utils";
     fenix.url = "github:nix-community/fenix";
     advisory-db = {
       url = "github:rustsec/advisory-db";
@@ -35,109 +35,14 @@
   };
 
   outputs =
-    {
-      self,
-      nixpkgs,
-      crane,
-      flake-utils,
-      advisory-db,
-      fenix,
-      ...
-    }:
-    flake-utils.lib.eachDefaultSystem (
-      system:
-      let
-        pkgs = import nixpkgs { inherit system; };
-
-        inherit (pkgs) lib;
-
-        craneLib = (crane.mkLib pkgs).overrideToolchain fenix.packages.${system}.complete.toolchain;
-
-        src = craneLib.cleanCargoSource ./.;
-
-        commonArgs = {
-          inherit src;
-          strictDeps = true;
-        };
-
-        cargoArtifacts = craneLib.buildDepsOnly commonArgs;
-
-        pkg = craneLib.buildPackage (
-          commonArgs
-          // {
-            pname = "gerrit-autosubmit";
-            src = ./.;
-          }
-        );
-      in
-      {
-        checks = lib.mapAttrs' (n: v: lib.nameValuePair "package-${n}" v) self.packages.${system} // {
-
-          rust-clippy = craneLib.cargoClippy (
-            commonArgs
-            // {
-              inherit cargoArtifacts;
-
-              src = ./.;
-
-              cargoClippyExtraArgs = "--all-targets -- --deny warnings";
-            }
-          );
-
-          rust-doc = craneLib.cargoDoc (
-            commonArgs
-            // {
-              inherit cargoArtifacts;
-
-              src = ./.;
-
-              env.RUSTDOCFLAGS = "--deny warnings";
-            }
-          );
-
-          rust-fmt = craneLib.cargoFmt {
-            inherit cargoArtifacts;
-
-            src = ./.;
-
-            rustFmtExtraArgs = "--config-path ${./.rustfmt.toml}";
-          };
-
-          toml-fmt = craneLib.taploFmt {
-            inherit cargoArtifacts;
-
-            src = lib.sources.sourceFilesBySuffices src [ ".toml" ];
-
-            taploExtraArgs = "--config ${./.taplo.toml}";
-          };
-
-          rust-audit = craneLib.cargoAudit {
-            inherit src advisory-db;
-          };
-        };
-
-        packages = {
-          default = pkg;
-          gerrit-autosubmit = pkg;
-        };
-
-        apps.default = flake-utils.lib.mkApp {
-          drv = pkg;
-        };
-
-        devShells.default = craneLib.devShell {
-          checks = self.checks.${system};
-        };
-      }
-    )
-    # --- Cross-system outputs ---
-    // {
-      nixosModules.default = import ./nix/module.nix;
-
-      overlays.default = final: prev: {
-        gerrit-autosubmit = self.packages.${final.system}.default;
-      };
-
-      flakeModules.default = import ./nix/flake-module.nix;
+    inputs @ { flake-parts, ... }:
+    flake-parts.lib.mkFlake { inherit inputs; } {
+      imports = [ ./nix/flake-module.nix ];
+      systems = [
+        "x86_64-linux"
+        "aarch64-linux"
+        "x86_64-darwin"
+        "aarch64-darwin"
+      ];
     };
 }
