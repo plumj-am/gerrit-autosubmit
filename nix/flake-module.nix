@@ -24,6 +24,8 @@ in
       commonArgs = {
         inherit src;
         strictDeps = true;
+        buildInputs = [ pkgs.openssl ];
+        nativeBuildInputs = [ pkgs.pkg-config ];
       };
 
       cargoArtifacts = craneLib.buildDepsOnly commonArgs;
@@ -83,6 +85,7 @@ in
 
       devShells.default = craneLib.devShell {
         checks = self.checks.${system};
+        env.LD_LIBRARY_PATH = "${pkgs.openssl.out}/lib:${pkgs.stdenv.cc.cc.lib}/lib";
       };
     };
 
