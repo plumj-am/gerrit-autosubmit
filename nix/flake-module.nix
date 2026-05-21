@@ -17,6 +17,8 @@ in
       pkgs = import nixpkgs { inherit system; };
       inherit (pkgs) lib;
 
+      pname = "gerrit-autosubmit";
+
       craneLib = (crane.mkLib pkgs).overrideToolchain fenix.packages.${system}.complete.toolchain;
 
       src = craneLib.cleanCargoSource root;
@@ -30,21 +32,21 @@ in
 
       cargoArtifacts = craneLib.buildDepsOnly commonArgs;
 
-      pkg = craneLib.buildPackage (
+      gerrit-autosubmit = craneLib.buildPackage (
         commonArgs
         // {
-          pname = "gerrit-autosubmit";
+          inherit pname;
         }
       );
     in
     {
       packages = {
-        default = pkg;
-        gerrit-autosubmit = pkg;
+        inherit gerrit-autosubmit;
+        default = gerrit-autosubmit;
       };
 
       checks = {
-        build = pkg;
+        "package-${pname}" = gerrit-autosubmit;
 
         rust-clippy = craneLib.cargoClippy (
           commonArgs
@@ -78,11 +80,6 @@ in
         };
       };
 
-      apps.default = {
-        type = "app";
-        program = "${pkg}/bin/gerrit-autosubmit";
-      };
-
       devShells.default = craneLib.devShell {
         checks = self.checks.${system};
         env.LD_LIBRARY_PATH = "${pkgs.openssl.out}/lib:${pkgs.stdenv.cc.cc.lib}/lib";
@@ -92,7 +89,7 @@ in
   flake = {
     nixosModules.default = import ./module.nix;
 
-    overlays.default = final: prev: {
+    overlays.default = final: _: {
       gerrit-autosubmit = self.packages.${final.system}.default;
     };
 
@@ -108,7 +105,7 @@ in
           };
         flake = {
           nixosModules.gerrit-autosubmit = import ./module.nix;
-          overlays.gerrit-autosubmit = final: prev: {
+          overlays.gerrit-autosubmit = final: _: {
             gerrit-autosubmit = inputs.gerrit-autosubmit.packages.${final.system}.default;
           };
         };
