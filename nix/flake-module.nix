@@ -61,7 +61,7 @@ in
         );
 
         rust-fmt = craneLib.cargoFmt {
-          inherit cargoArtifacts;
+          inherit cargoArtifacts src;
           rustFmtExtraArgs = "--config-path ${root}/.rustfmt.toml";
         };
 
