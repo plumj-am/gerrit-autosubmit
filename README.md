@@ -2,7 +2,14 @@
 
 Forked from
 [mschwaig/snix](https://github.com/mschwaig/snix/tree/canon/ops/gerrit-autosubmit)
-with improvements and personal tweaks.
+with improvements, personal tweaks, and module outputs.
+
+Includes a NixOS and flake-parts module for use in your own configurations. See
+[`nix/module.nix`](./nix/module.nix) for more information.
+
+## Usage
+
+TODO
 
 ## License
 
