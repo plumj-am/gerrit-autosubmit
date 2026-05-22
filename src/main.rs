@@ -19,7 +19,6 @@
 
 use std::{
    collections::{
-      BTreeMap,
       HashMap,
       HashSet,
    },
@@ -99,30 +98,30 @@ fn autosubmit(cfg: &gerrit::Config) -> Result<bool> {
       submittable_changes.insert(change.id.clone());
    }
 
-   let mut chains: BTreeMap<usize, String> = Default::default();
+   let mut best_len = 0_usize;
+   let mut best_id: Option<String> = None;
    for change_id in &submittable_changes {
       let ancestors = submitted_with(cfg, change_id)?;
       if ancestors.is_subset(&submittable_changes) {
-         chains.insert(
-            if ancestors.is_empty() {
-               1
-            } else {
-               ancestors.len()
-            },
-            change_id.clone(),
-         );
+         let len = if ancestors.is_empty() {
+            1
+         } else {
+            ancestors.len()
+         };
+         if len > best_len {
+            best_len = len;
+            best_id = Some(change_id.clone());
+         }
       }
    }
 
-   // BTreeMap::last_key_value gives us the value associated with the
-   // largest key, i.e. with the longest submittable chain of changes.
-   if let Some((count, change_id)) = chains.last_key_value() {
+   if let Some(change_id) = best_id {
       println!(
          "submitting change {} with chain length {}",
-         change_id, count
+         change_id, best_len
       );
 
-      gerrit::submit(cfg, change_id).context("while submitting")?;
+      gerrit::submit(cfg, &change_id).context("while submitting")?;
 
       Ok(true)
    } else {
