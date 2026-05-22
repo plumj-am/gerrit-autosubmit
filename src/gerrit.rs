@@ -37,6 +37,7 @@ impl Config {
             .unwrap_or(30),
          agent:      Agent::config_builder()
             .timeout_global(Some(Duration::from_secs(30)))
+            .user_agent("gerrit-autosubmit")
             .build()
             .new_agent(),
       })
@@ -77,7 +78,6 @@ where
    let response = cfg
       .agent
       .get(&url)
-      .header("User-Agent", "gerrit-autosubmit")
       .header("Authorization", &auth_header(&cfg.username, &cfg.password))
       .call()
       .map_err(|e| request_err(e, "request failed"))?;
@@ -91,7 +91,6 @@ pub fn submit(cfg: &Config, change_id: &str) -> Result<()> {
    let url = format!("{}/a/changes/{}/submit", cfg.gerrit_url, change_id);
    cfg.agent
       .post(&url)
-      .header("User-Agent", "gerrit-autosubmit")
       .header("Authorization", &auth_header(&cfg.username, &cfg.password))
       .send_empty()
       .map_err(|e| request_err(e, "submit failed"))?;
