@@ -5,7 +5,6 @@ let
     nixpkgs
     crane
     fenix
-    advisory-db
     ;
 
   root = ./..;
@@ -72,10 +71,6 @@ in
           inherit cargoArtifacts;
           src = lib.sources.sourceFilesBySuffices src [ ".toml" ];
           taploExtraArgs = "--config ${root}/.taplo.toml";
-        };
-
-        rust-audit = craneLib.cargoAudit {
-          inherit src advisory-db;
         };
       };
 
