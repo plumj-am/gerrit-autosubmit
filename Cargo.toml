@@ -4,8 +4,8 @@ name    = "gerrit-autosubmit"
 version = "0.1.0"
 
 [dependencies]
-anyhow     = "1.0.75"
+anyhow     = "1.0.102"
 base64     = "0.22.1"
-serde      = { features = [ "derive" ], version = "1.0.193" }
-serde_json = "1.0.108"
+serde      = { features = [ "derive" ], version = "1.0.228" }
+serde_json = "1.0.150"
 ureq       = "3.3.0"
