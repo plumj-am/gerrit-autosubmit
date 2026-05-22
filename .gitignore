@@ -12,6 +12,8 @@
 !.rustfmt.toml
 !.taplo.toml
 
+!release.nu
+
 !LICENSE
 !*.md
 
