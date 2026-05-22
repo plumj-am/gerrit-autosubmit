@@ -31,13 +31,16 @@ fn list_submittable(cfg: &gerrit::Config) -> Result<Vec<SubmittableChange>> {
    .context("failed to list submittable changes")?;
 
    for change in changes {
+      let Some(revision) = change.revisions.into_keys().next() else {
+         eprintln!(
+            "WARNING: skipping change {} (no current revision)",
+            change.id
+         );
+         continue;
+      };
       out.push(SubmittableChange {
-         id:       change.id,
-         revision: change
-            .revisions
-            .into_keys()
-            .next()
-            .context("change had no current revision")?,
+         id: change.id,
+         revision,
       });
    }
 
