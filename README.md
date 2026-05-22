@@ -17,8 +17,8 @@ Gerrit Autosubmit is a very simple program which does the following:
 
 Based on
 [mschwaig/snix](https://github.com/mschwaig/snix/tree/8903fbb9752edfee02499319ea61a6f291eff608/ops/gerrit-autosubmit).
-This fork adds code improvements, a [Nix flake](./flake.nix), and
-[NixOS module](./nix/module.nix) outputs.
+This fork has no system dependencies (pure Rust), a [Nix flake](./flake.nix),
+and [NixOS module](./nix/module.nix) outputs.
 
 ## Usage
 
