@@ -4,23 +4,24 @@ use std::{
 };
 
 use anyhow::{
-   Context,
+   Context as _,
    Result,
    anyhow,
 };
+use base64::Engine as _;
 use serde::Deserialize;
 use serde_json::Value;
 
 pub struct Config {
-   gerrit_url:   String,
-   username:     String,
-   password:     String,
-   pub interval: u64,
+   pub gerrit_url: String,
+   pub username:   String,
+   pub password:   String,
+   pub interval:   u64,
 }
 
 impl Config {
    pub fn from_env() -> Result<Self> {
-      Ok(Config {
+      Ok(Self {
          gerrit_url: env::var("GERRIT_URL")
             .context("Gerrit base URL (no trailing slash) must be set in GERRIT_URL")?,
          username:   env::var("GERRIT_USERNAME")
@@ -51,19 +52,20 @@ const GERRIT_RESPONSE_PREFIX: &str = ")]}'";
 
 fn request_err(e: ureq::Error, context: &str) -> anyhow::Error {
    match e {
-      ureq::Error::StatusCode(code) => anyhow!("{} with status {}", context, code),
-      e => anyhow!("{}: {}", context, e),
+      ureq::Error::StatusCode(code) => anyhow!("{context} with status {code}"),
+      e => anyhow!("{context}: {e}"),
    }
 }
 
 fn auth_header(username: &str, password: &str) -> String {
-   use base64::Engine;
-   let creds =
-      base64::engine::general_purpose::STANDARD.encode(format!("{}:{}", username, password));
-   format!("Basic {}", creds)
+   let creds = base64::engine::general_purpose::STANDARD.encode(format!("{username}:{password}"));
+   format!("Basic {creds}")
 }
 
-pub fn get<T: serde::de::DeserializeOwned>(cfg: &Config, endpoint: &str) -> Result<T> {
+pub fn get<T>(cfg: &Config, endpoint: &str) -> Result<T>
+where
+   T: serde::de::DeserializeOwned,
+{
    let url = format!("{}/a{}", cfg.gerrit_url, endpoint);
    let response = ureq::get(&url)
       .header("User-Agent", "gerrit-autosubmit")

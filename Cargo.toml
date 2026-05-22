@@ -1,7 +1,13 @@
 [package]
-edition = "2024"
-name    = "gerrit-autosubmit"
-version = "0.1.0"
+description = "An autosubmit bot for Gerrit"
+name        = "gerrit-autosubmit"
+version     = "0.1.0"
+
+categories = [ "development-tools" ]
+edition    = "2024"
+keywords   = [ "gerrit", "autosubmit", "merge", "queue" ]
+license    = "MIT"
+repository = "https://git.plumj.am/plumjam/gerrit-autosubmit"
 
 [dependencies]
 anyhow     = "1.0.102"

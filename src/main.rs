@@ -27,7 +27,7 @@ use std::{
 };
 
 use anyhow::{
-   Context,
+   Context as _,
    Result,
 };
 
@@ -49,7 +49,7 @@ fn list_submittable(cfg: &gerrit::Config) -> Result<Vec<SubmittableChange>> {
    )
    .context("failed to list submittable changes")?;
 
-   for change in changes.into_iter() {
+   for change in changes {
       out.push(SubmittableChange {
          id:       change.id,
          revision: change
@@ -73,22 +73,21 @@ fn is_submittable(cfg: &gerrit::Config, change: &SubmittableChange) -> Result<bo
    )
    .context("failed to fetch actions for change")?;
 
-   match response.get("submit") {
-      None => Ok(false),
-      Some(action) => Ok(action.enabled),
-   }
+   response
+      .get("submit")
+      .map_or_else(|| Ok(false), |action| Ok(action.enabled))
 }
 
 fn submitted_with(cfg: &gerrit::Config, change_id: &str) -> Result<HashSet<String>> {
    let response: Vec<gerrit::ChangeInfo> =
-      gerrit::get(cfg, &format!("/changes/{}/submitted_together", change_id))
+      gerrit::get(cfg, &format!("/changes/{change_id}/submitted_together"))
          .context("failed to fetch related change list")?;
 
    Ok(response.into_iter().map(|c| c.id).collect())
 }
 
 fn autosubmit(cfg: &gerrit::Config) -> Result<bool> {
-   let mut submittable_changes: HashSet<String> = Default::default();
+   let mut submittable_changes: HashSet<String> = HashSet::default();
 
    for change in list_submittable(cfg)? {
       if !is_submittable(cfg, &change)? {
@@ -116,10 +115,7 @@ fn autosubmit(cfg: &gerrit::Config) -> Result<bool> {
    }
 
    if let Some(change_id) = best_id {
-      println!(
-         "submitting change {} with chain length {}",
-         change_id, best_len
-      );
+      println!("submitting change {change_id} with chain length {best_len}");
 
       gerrit::submit(cfg, &change_id).context("while submitting")?;
 
