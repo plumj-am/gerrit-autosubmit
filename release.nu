@@ -19,6 +19,7 @@ if not ($new_version =~ '^[0-9]+\.[0-9]+\.[0-9]+$') {
 jj new
 
 open Cargo.toml | upsert package.version $new_version | save -f Cargo.toml
+cargo check --quiet
 
 jj commit -m $"release: `v($new_version)`"
 jj git export
