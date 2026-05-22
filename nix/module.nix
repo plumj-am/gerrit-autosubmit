@@ -23,6 +23,12 @@ in
 
     gerritUsername = mkStringOption "autosubmit-bot";
 
+    pollInterval = lib.mkOption {
+      description = "Poll interval in seconds between autosubmit attempts";
+      default = 30;
+      type = lib.types.int;
+    };
+
     secretsFile = lib.mkOption {
       description = "Path to a systemd EnvironmentFile containing secrets";
       default = config.age.secretsDir + "/gerrit-autosubmit";
@@ -47,6 +53,7 @@ in
       environment = {
         GERRIT_URL = cfg.gerritUrl;
         GERRIT_USERNAME = cfg.gerritUsername;
+        GERRIT_POLL_INTERVAL_SECS = toString cfg.pollInterval;
       };
     };
   };

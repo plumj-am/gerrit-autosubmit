@@ -7,7 +7,7 @@ Gerrit Autosubmit is a very simple program which does the following:
 3. Filter out changes that would submit ancestors **not** marked with the
    `Autosubmit` label
 4. Submit the longest chain
-5. Repeat every 30 seconds
+5. Repeat every 30 seconds (configurable)
 
 > [!NOTE]
 > ALL changes in a chain must have the `Autosubmit` label set to be
@@ -17,8 +17,8 @@ Gerrit Autosubmit is a very simple program which does the following:
 
 Based on
 [mschwaig/snix](https://github.com/mschwaig/snix/tree/8903fbb9752edfee02499319ea61a6f291eff608/ops/gerrit-autosubmit).
-This fork has no system dependencies (pure Rust), a [Nix flake](./flake.nix),
-and [NixOS module](./nix/module.nix) outputs.
+This fork has no system dependencies (pure Rust), more configuration, a
+[Nix flake](./flake.nix), and [NixOS module](./nix/module.nix) outputs.
 
 ## Usage
 
@@ -56,6 +56,7 @@ Import the module and use it:
     enable = true;
     gerritUrl = "https://gerrit.example.com";
     gerritUsername = "autosubmit-bot";
+    interval = 30;
     secretsFile = config.age.secrets.gerritAutosubmitEnvironment.path;
   };
 }

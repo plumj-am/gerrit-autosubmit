@@ -136,7 +136,7 @@ fn main() -> Result<()> {
 
    loop {
       if !autosubmit(&cfg)? {
-         thread::sleep(time::Duration::from_secs(30));
+         thread::sleep(time::Duration::from_secs(cfg.interval));
       }
    }
 }

@@ -12,9 +12,10 @@ use serde::Deserialize;
 use serde_json::Value;
 
 pub struct Config {
-   gerrit_url: String,
-   username:   String,
-   password:   String,
+   gerrit_url:   String,
+   username:     String,
+   password:     String,
+   pub interval: u64,
 }
 
 impl Config {
@@ -26,6 +27,10 @@ impl Config {
             .context("Gerrit username must be set in GERRIT_USERNAME")?,
          password:   env::var("GERRIT_PASSWORD")
             .context("Gerrit password must be set in GERRIT_PASSWORD")?,
+         interval:   env::var("GERRIT_POLL_INTERVAL_SECS")
+            .ok()
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(30),
       })
    }
 }
