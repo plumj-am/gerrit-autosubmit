@@ -1,24 +1,19 @@
 [package]
-categories = ["development-tools"]
+categories  = [ "development-tools" ]
 description = "An autosubmit bot for Gerrit"
-edition = "2024"
-keywords = [
-    "gerrit",
-    "autosubmit",
-    "merge",
-    "queue",
-]
-license = "MIT"
-name = "gerrit-autosubmit"
-repository = "https://git.plumj.am/plumjam/gerrit-autosubmit"
-version = "0.1.1"
+edition     = "2024"
+keywords    = [ "gerrit", "autosubmit", "merge", "queue" ]
+license     = "MIT"
+name        = "gerrit-autosubmit"
+repository  = "https://git.plumj.am/plumjam/gerrit-autosubmit"
+version     = "0.1.1"
 
 [dependencies]
-anyhow = "1.0.102"
-base64 = "0.22.1"
+anyhow     = "1.0.102"
+base64     = "0.22.1"
 serde_json = "1.0.150"
-ureq = "3.3.0"
+ureq       = "3.3.0"
 
 [dependencies.serde]
-features = ["derive"]
-version = "1.0.228"
+features = [ "derive" ]
+version  = "1.0.228"
