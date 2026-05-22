@@ -25,20 +25,84 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-    flake-parts.url = "github:hercules-ci/flake-parts";
     crane.url = "github:ipetkov/crane";
     fenix.url = "github:nix-community/fenix";
   };
 
   outputs =
-    inputs@{ flake-parts, ... }:
-    flake-parts.lib.mkFlake { inherit inputs; } {
-      imports = [ ./nix/flake-module.nix ];
+    {
+      self,
+      nixpkgs,
+      fenix,
+      crane,
+      ...
+    }:
+    let
+      lib = nixpkgs.lib;
+
       systems = [
         "x86_64-linux"
         "aarch64-linux"
         "x86_64-darwin"
         "aarch64-darwin"
       ];
+
+      eachSystem =
+        f:
+        lib.genAttrs systems (
+          system:
+          let
+            pkgs = nixpkgs.legacyPackages.${system};
+            craneLib = (crane.mkLib pkgs).overrideToolchain fenix.packages.${system}.complete.toolchain;
+          in
+          f {
+            inherit
+              self
+              lib
+              system
+              pkgs
+              craneLib
+              ;
+          }
+        );
+
+      pname = "gerrit-autosubmit";
+    in
+    {
+      packages = eachSystem (
+        { craneLib, ... }:
+        let
+          src = craneLib.cleanCargoSource ./.;
+          gerrit-autosubmit = craneLib.buildPackage {
+            inherit pname src;
+            strictDeps = true;
+            meta.mainProgram = pname;
+          };
+        in
+        {
+          inherit gerrit-autosubmit;
+          default = gerrit-autosubmit;
+        }
+      );
+
+      checks = eachSystem ({ craneLib, lib, ... }: import ./nix/checks.nix { inherit craneLib lib; });
+
+      devShells = eachSystem (
+        { craneLib, system, ... }:
+        {
+          default = craneLib.devShell {
+            checks = self.checks.${system};
+          };
+        }
+      );
+
+      nixosModules.default = {
+        imports = [ ./nix/module.nix ];
+        nixpkgs.overlays = [ self.overlays.default ];
+      };
+
+      overlays.default = final: _: {
+        gerrit-autosubmit = self.packages.${final.system}.default;
+      };
     };
 }
