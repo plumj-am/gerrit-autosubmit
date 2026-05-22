@@ -1,22 +1,3 @@
-//! gerrit-autosubmit connects to a Gerrit instance and submits the
-//! longest chain of changes in which all ancestors are ready and
-//! marked for autosubmit.
-//!
-//! It works like this:
-//!
-//! * fetches all changes the Gerrit query API considers submittable (i.e. all
-//!   requirements fulfilled), and that have the `Autosubmit` label set
-//!
-//! * filters these changes down to those that are _actually_ submittable (in
-//!   Gerrit API terms: that have an active Submit button)
-//!
-//! * filters out those that would submit ancestors that are *not* marked with
-//!   the `Autosubmit` label
-//!
-//! * submits the longest chain
-//!
-//! * loops
-
 use std::{
    collections::{
       HashMap,
