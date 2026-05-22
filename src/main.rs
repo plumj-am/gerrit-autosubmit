@@ -114,8 +114,19 @@ fn main() -> Result<()> {
    let cfg = gerrit::Config::from_env()?;
 
    loop {
-      if !autosubmit(&cfg)? {
-         thread::sleep(time::Duration::from_secs(cfg.interval));
+      match autosubmit(&cfg) {
+         Ok(true) => {}, // submitted so re-check immediately
+         Ok(false) => {
+            thread::sleep(time::Duration::from_secs(cfg.interval));
+         },
+         Err(e) => {
+            let msg = format!("{e:#}");
+            if msg.contains("status 401") || msg.contains("status 403") {
+               return Err(e);
+            }
+            eprintln!("ERROR: autosubmit failed: {e:?}");
+            thread::sleep(time::Duration::from_secs(cfg.interval));
+         },
       }
    }
 }
