@@ -26,10 +26,6 @@ in
       commonArgs = {
         inherit src;
         strictDeps = true;
-        buildInputs = [ pkgs.openssl ];
-        nativeBuildInputs = [ pkgs.pkg-config ];
-        env.LD_LIBRARY_PATH = "${pkgs.openssl.out}/lib";
-        runtimeDependencies = [ pkgs.openssl ];
       };
 
       cargoArtifacts = craneLib.buildDepsOnly commonArgs;
@@ -85,12 +81,11 @@ in
 
       devShells.default = craneLib.devShell {
         checks = self.checks.${system};
-        env.LD_LIBRARY_PATH = "${pkgs.openssl.out}/lib";
       };
     };
 
   flake = {
-    nixosModules.default = { config, lib, pkgs, ... }: {
+    nixosModules.default = {
       imports = [ ./module.nix ];
       nixpkgs.overlays = [ self.overlays.default ];
     };

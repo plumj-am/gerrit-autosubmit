@@ -44,26 +44,40 @@ pub struct Action {
 
 const GERRIT_RESPONSE_PREFIX: &str = ")]}'";
 
-pub fn get<T: serde::de::DeserializeOwned>(cfg: &Config, endpoint: &str) -> Result<T> {
-   let response = crimp::Request::get(&format!("{}/a{}", cfg.gerrit_url, endpoint))
-      .user_agent("gerrit-autosubmit")?
-      .basic_auth(&cfg.username, &cfg.password)?
-      .send()?
-      .error_for_status(|r| anyhow!("request failed with status {}", r.status))?;
+fn request_err(e: ureq::Error, context: &str) -> anyhow::Error {
+   match e {
+      ureq::Error::StatusCode(code) => anyhow!("{} with status {}", context, code),
+      e => anyhow!("{}: {}", context, e),
+   }
+}
 
-   let result: T = serde_json::from_slice(&response.body[GERRIT_RESPONSE_PREFIX.len()..])?;
+fn auth_header(username: &str, password: &str) -> String {
+   use base64::Engine;
+   let creds =
+      base64::engine::general_purpose::STANDARD.encode(format!("{}:{}", username, password));
+   format!("Basic {}", creds)
+}
+
+pub fn get<T: serde::de::DeserializeOwned>(cfg: &Config, endpoint: &str) -> Result<T> {
+   let url = format!("{}/a{}", cfg.gerrit_url, endpoint);
+   let response = ureq::get(&url)
+      .header("User-Agent", "gerrit-autosubmit")
+      .header("Authorization", &auth_header(&cfg.username, &cfg.password))
+      .call()
+      .map_err(|e| request_err(e, "request failed"))?;
+
+   let body = response.into_body().read_to_string()?;
+   let result: T = serde_json::from_str(&body[GERRIT_RESPONSE_PREFIX.len()..])?;
    Ok(result)
 }
 
 pub fn submit(cfg: &Config, change_id: &str) -> Result<()> {
-   crimp::Request::post(&format!(
-      "{}/a/changes/{}/submit",
-      cfg.gerrit_url, change_id
-   ))
-   .user_agent("gerrit-autosubmit")?
-   .basic_auth(&cfg.username, &cfg.password)?
-   .send()?
-   .error_for_status(|r| anyhow!("submit failed with status {}", r.status))?;
+   let url = format!("{}/a/changes/{}/submit", cfg.gerrit_url, change_id);
+   ureq::post(&url)
+      .header("User-Agent", "gerrit-autosubmit")
+      .header("Authorization", &auth_header(&cfg.username, &cfg.password))
+      .send_empty()
+      .map_err(|e| request_err(e, "submit failed"))?;
 
    Ok(())
 }

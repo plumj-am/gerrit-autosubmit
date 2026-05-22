@@ -47,7 +47,6 @@ in
       environment = {
         GERRIT_URL = cfg.gerritUrl;
         GERRIT_USERNAME = cfg.gerritUsername;
-        LD_LIBRARY_PATH = "${lib.getLib pkgs.openssl}/lib";
       };
     };
   };
