@@ -1,6 +1,7 @@
 use std::{
    collections::HashMap,
    env,
+   time::Duration,
 };
 
 use anyhow::{
@@ -11,12 +12,14 @@ use anyhow::{
 use base64::Engine as _;
 use serde::Deserialize;
 use serde_json::Value;
+use ureq::Agent;
 
 pub struct Config {
    pub gerrit_url: String,
    pub username:   String,
    pub password:   String,
    pub interval:   u64,
+   pub agent:      Agent,
 }
 
 impl Config {
@@ -32,6 +35,10 @@ impl Config {
             .ok()
             .and_then(|v| v.parse().ok())
             .unwrap_or(30),
+         agent:      Agent::config_builder()
+            .timeout_global(Some(Duration::from_secs(30)))
+            .build()
+            .new_agent(),
       })
    }
 }
@@ -67,7 +74,9 @@ where
    T: serde::de::DeserializeOwned,
 {
    let url = format!("{}/a{}", cfg.gerrit_url, endpoint);
-   let response = ureq::get(&url)
+   let response = cfg
+      .agent
+      .get(&url)
       .header("User-Agent", "gerrit-autosubmit")
       .header("Authorization", &auth_header(&cfg.username, &cfg.password))
       .call()
@@ -80,7 +89,8 @@ where
 
 pub fn submit(cfg: &Config, change_id: &str) -> Result<()> {
    let url = format!("{}/a/changes/{}/submit", cfg.gerrit_url, change_id);
-   ureq::post(&url)
+   cfg.agent
+      .post(&url)
       .header("User-Agent", "gerrit-autosubmit")
       .header("Authorization", &auth_header(&cfg.username, &cfg.password))
       .send_empty()

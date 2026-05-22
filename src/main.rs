@@ -124,8 +124,14 @@ fn main() -> Result<()> {
             if msg.contains("status 401") || msg.contains("status 403") {
                return Err(e);
             }
-            eprintln!("ERROR: autosubmit failed: {e:?}");
-            thread::sleep(time::Duration::from_secs(cfg.interval));
+            let sleep = if msg.contains("status 429") {
+               eprintln!("ERROR: rate limited, waiting 5 min");
+               300
+            } else {
+               eprintln!("ERROR: autosubmit failed: {e:?}");
+               cfg.interval
+            };
+            thread::sleep(time::Duration::from_secs(sleep));
          },
       }
    }
